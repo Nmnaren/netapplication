@@ -6,8 +6,6 @@
 trigger:
 - main
 
-stages:
-- stage: "buildsatge"
   jobs:
   - job: "buildjob" 
     pool:
@@ -37,58 +35,3 @@ stages:
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
 
-- stage: "DevDeploy"
-  dependsOn: "buildsatge"
-  condition: eq(variables['Build.Sourcebranch'], 'refs/heads/main')
-  jobs:
-  - deployment:
-    pool: 
-      vmImage: 'windows-latest'
-      environment: Dev
-      strategy:
-      runOnce:
-      deploy:
-        steps:
-        - task: AzureRMWebdeployment@4
-          inputs:
-          connectionType: 'AzureRM'
-          appType: 'WebApp'
-          WebAppName: 'Dev-app-demo'
-          packageForLinux: '$(pipeline.Workspace)/**/*.zip'
-- stage: "QADeploy"
-  dependsOn: "DevDeploy"
-  condition: succeeded()
-  jobs:
-  - deployment:
-    pool: 
-      vmImage: 'windows-latest'
-      environment: QA
-      strategy:
-      runOnce:
-      deploy:
-        steps:
-        - task: AzureRMWebdeployment@4
-          inputs:
-          connectionType: 'AzureRM'
-          appType: 'WebApp'
-          WebAppName: 'QA-app-demo'
-          packageForLinux: '$(pipeline.Workspace)/**/*.zip'
-
-- stage: "ProdDeploy"
-  dependsOn: "QADeploy"
-  condition: succeeded()
-  jobs:
-  - deployment:
-    pool: 
-      vmImage: 'windows-latest'
-      environment: Prod
-      strategy:
-      runOnce:
-      deploy:
-        steps:
-        - task: AzureRMWebdeployment@4
-          inputs:
-          connectionType: 'AzureRM'
-          appType: 'WebApp'
-          WebAppName: 'Prod-app-demo'
-          packageForLinux: '$(pipeline.Workspace)/**/*.zip'
